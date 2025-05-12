@@ -1,0 +1,103 @@
+npm init -y
+npm install express cors body-parser
+server.js
+
+js
+Copy
+Edit
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+const PORT = process.env.PORT || 5000;
+
+app.get("/", (req, res) => {
+  res.send("POS backend running");
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
+
+bash
+Copy
+Edit
+node backend/server.js
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+  <title>POS System</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <h2>Add Client</h2>
+  <input id="clientName" placeholder="Name">
+  <input id="clientEmail" placeholder="Email">
+  <button onclick="addClient()">Add Client</button>
+
+  <h2>New Transaction</h2>
+  <input id="product" placeholder="Product">
+  <input id="amount" placeholder="Amount">
+  <button onclick="addTransaction()">Add Transaction</button>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+script.js
+
+js
+Copy
+Edit
+// 1. Replace with your Firebase project config
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// 2. Add Client
+async function addClient() {
+  const name = document.getElementById('clientName').value;
+  const email = document.getElementById('clientEmail').value;
+  await db.collection("clients").add({ name, email });
+  alert("Client added!");
+}
+
+// 3. Add Transaction
+async function addTransaction() {
+  const product = document.getElementById('product').value;
+  const amount = document.getElementById('amount').value;
+  const tx = { product, amount, date: new Date().toISOString() };
+
+  await db.collection("transactions").add(tx);
+  generateInvoice(product, amount);
+}
+
+// 4. Generate Invoice PDF
+function generateInvoice(product, amount) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.text("INVOICE", 10, 10);
+  doc.text(`Product: ${product}`, 10, 20);
+  doc.text(`Amount: $${amount}`, 10, 30);
+  doc.text(`Date: ${new Date().toLocaleDateString()}`, 10, 40);
+
+  doc.save("invoice.pdf");
+}
